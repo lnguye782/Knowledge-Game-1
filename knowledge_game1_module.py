@@ -15,7 +15,7 @@ def get_team_names():
     font = pygame.font.Font(None, 45)
 
     # Set up team name screen
-    window_size = (800, 960)
+    window_size = (600, 720)
     team_name_screen = pygame.display.set_mode(window_size)
 
     # Initialize game state
@@ -80,47 +80,50 @@ def get_team_names():
     
     return team_names
 
-def read_csv(file_name):
+def load_images(file_helper):
     # Initialize dictionary
-    choice_dict = {
-        1: [], # Correct choice
-        2: []  # Incorrect choice
+    question_dict = {
+        1: [],  # Correct choice
+        2: []   # Incorrect choice
     }
-
-    with open(file_name, 'r') as csvfile:
+    with open(file_helper, 'r') as csvfile:
         csv_reader = csv.reader(csvfile)
-        # Skip header
-        next(csv_reader)
         for row in csv_reader:
-            temp = int(row[0])
-            choice = row[1]
-            answer = row[2]
-            correctness = row[3]
-            if temp == 1: # Correct choice
-                choice_dict[temp].append((choice, answer, correctness))
-            elif temp == 2: # Incorrect choice
-                choice_dict[temp].append((choice, answer, correctness))
-
-    return choice_dict
-
+            value = int(row[0])
+            question_key = row[1]
+            answer_key = row[2]
+            # Load images
+            question_image = pygame.image.load(f'./Assets/{question_key}.png')
+            answer_image = pygame.image.load(f'./Assets/{answer_key}.png')
+            # Store images into dictionary
+            question_dict[value].append((question_image, answer_image))
+    
+    return question_dict
+    
 def assign_random_choice_to_cells(grid_size, choice_bank):
     # Initialize dictionary
     choice_cell = {}
     answer_cell = {}
     correctness_cell = {}
-    
-    # Combine all choices
-    available_choice = choice_bank[1] + choice_bank[2]
 
     for row in range(grid_size):
         for col in range(grid_size):
+            available_correct_choices = [c for c in choice_bank[1] if c not in choice_cell.values()]
+            available_incorrect_choices = [i for i in choice_bank[2] if i not in choice_cell.values()]
+            available_choices = available_correct_choices + available_incorrect_choices
             # Assign one random choice to the current cell
-            if available_choice:
-                selected_choice = random.choice(available_choice)
+            if available_choices:
+                selected_choice = random.choice(available_choices)
                 choice_cell[(row, col)] = selected_choice[0]
                 answer_cell[(row, col)] = selected_choice[1]
-                correctness_cell[(row, col)] = selected_choice[2]
-                # Remove the selected choice
-                available_choice.remove(selected_choice)
+            # Determine correctness based on the choice bank
+            if selected_choice in available_correct_choices:
+                correctness_cell[(row, col)] = 1    # Correct choice
+                # Remove the selected choice from choice bank to avoid repeating
+                choice_bank[1].remove(selected_choice)
+            else:
+                correctness_cell[(row, col)] = 2    # Incorrect choice
+                # Remove the selected choice from choice bank to avoid repeating
+                choice_bank[2].remove(selected_choice)
 
     return choice_cell, answer_cell, correctness_cell
