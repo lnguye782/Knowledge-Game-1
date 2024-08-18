@@ -62,7 +62,7 @@ def get_team_names():
         team_name_screen.fill(WHITE)
 
         # Render input text
-        input_text = font.render(temp_text, True, BLUE)
+        input_text = font.render(temp_text, True, 'dodgerblue2')
 
         # Resize input box if user input is too long
         width = max(200, input_text.get_width() + 10)

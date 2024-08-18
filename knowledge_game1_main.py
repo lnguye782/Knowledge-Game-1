@@ -38,9 +38,11 @@ cell_selected = None
 cell_answered = {}
 current_player = 1
 current_player_score = {1: 0, 2: 0}
+running_main_screen = True
+timer_start = pygame.time.get_ticks()
+timer_limit = 30000 + 1000 # 30 seconds timer
 
 # Game loop
-running_main_screen = True
 while running_main_screen:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -61,9 +63,19 @@ while running_main_screen:
                 # Update player score
                 if cell_answered[cell_selected] == 1:
                     current_player_score[current_player] += 1
+                # Reset timer since current player makes the choice
+                timer_start = pygame.time.get_ticks()
                 # Switch player turn
                 current_player = 2 if current_player == 1 else 1
             
+    # Switch player turn if current player runs out of time
+    timer_elapsed = pygame.time.get_ticks() - timer_start
+    if timer_elapsed > timer_limit:
+        # Switch player turn
+        current_player = 2 if current_player == 1 else 1
+        # Reset timer
+        timer_start = pygame.time.get_ticks()
+                
     main_screen.fill(WHITE)
 
     # Draw grid table of the game
@@ -106,6 +118,11 @@ while running_main_screen:
     text_player_turn = font.render("{}'s Turn".format(team_names[current_player]), True, BLACK)
     text_player_turn_rect = text_player_turn.get_rect(center=(500, 100))
     main_screen.blit(text_player_turn, text_player_turn_rect)
+
+    # Show the timer
+    text_timer = font.render("{}".format(max(0, (timer_limit - timer_elapsed) // 1000)), True, RED)
+    rect_timer = text_timer.get_rect(center=(window_size[0] - 30, window_size[1] - 700))
+    main_screen.blit(text_timer, rect_timer)
 
     # Update display
     pygame.display.flip()
